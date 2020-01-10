@@ -1,0 +1,43 @@
+100, C0 //LD 0A-prenos iz memorije u akumulator, memorijsko direktno adresiranje
+101, 00
+102, 00
+103, 0A
+
+104, 41//JSR #150-skok u potprogram, neposredno adresiranje
+105, 01
+106, 50
+
+107, C8// XOR (PC)E-logicka instrukcija sa pcrel
+108, 80
+109, 0E
+
+10A, C1//ST(0000)-prenos iz akumulatora u memoriju, memorijsko indirektno adresiranje
+10B, 40
+10C, 00
+10D, 00
+
+10E, C4//ADD #2-aritmeticka instrukcija sa neposrednim adresiranjem 
+10F, C0
+110, 00
+111, 02
+
+112, 0D //Bnvf-uslovni
+113, 02
+114, 89 //ROLC
+115, 8A	//INTE
+116, 82 //ASR
+117, 9F//HALT
+
+
+
+150, 87//LSL-pomeracka instrukcija
+151, 80//RTS
+
+0118, FF
+0119, FF
+
+000A, 00
+000B, 02 
+
+0000, 20
+0001, 00

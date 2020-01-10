@@ -1,0 +1,278 @@
+!Provera starta!
+madr00 br (if !START then madr00);
+
+!Citanje instrukcije!
+madr01 PCout1, MOST1_2, ldMAR, incPC;
+madr02 br (if hack then madr02);
+madr03 eMAR, rdCPU, br (if !fcCPU then madr03);
+madr04 MDRout1, ldIR0; !Ocitan prvi bajt instrukcije, cita se drugi!
+madr05 br (if !gropr then madr07);
+madr06 stPRCOD, br madr55; !Skok na prekide ako je opcod greska!
+madr07 br (if l1 then madr2E); !Skok na fazu izvrsavanja ako je instrukcija duzine 1B!
+madr08 PCout1, MOST1_2, ldMAR, incPC; 
+madr09 br (if hack then madr09);
+madr0A eMAR, rdCPU, br (if !fcCPU then madr0A); 
+madr0B MDRout1, MOST1_3, ldIR1, ldIR2;
+madr0C br (if !gradr then madr0E);
+madr0D stPRADR, br madr74; !Skok na opsluzivanje prekida u slucaju gradr greske!
+madr0E br (if l2_brnch then madr2E); !Ako je instrukcija skoka, skace se na fazu izvrsavanja!
+madr0F br madr10;
+madr10 PCout1, MOST1_2, ldMAR, incPC; !Drugi bajt ocitan, sad se cita treci!
+madr11 br (if hack then madr11);
+madr12 eMAR, rdCPU, br (if !fcCPU then madr12);
+madr13 MDRout1, ldIR2, br (if l3_jump then madr2E); !Ucitam 3.B i ako je instrukcija skoka, ide se na fazu opsluzivanja!
+madr14 br (if l3_arlog then madr19); !Ako je aritmeticko-logicka duzine 3B, ide se na fazu formiranja adrese i citanja operanada! 
+madr15 PCout1, MOST1_2, ldMAR, incPC;
+madr16 br (if hack then madr16);
+madr17 eMAR, rdCPU, br (if !fcCPU then madr17);
+madr18 MDRout1, ldIR3; !Ocitan 4.B instrukcije!
+
+!Adresiranja!
+madr19 bradr
+
+!Memdir!
+madr1A IRDAout3, MOST3_2, ldMAR, br (if store then madr2E); !skok na fazu izvrsavanja!
+madr1B br madr26;  !skok na citanje operanda!
+
+!Memind!
+madr1C IRDAout3, MOST3_2, ldMAR;
+madr1D br (if hack then madr1D);
+madr1E eMAR, rdCPU, br (if !fcCPU then madr1E);
+madr1F MDRout1, ldDWH, incMAR;
+madr20 br (if hack then madr20);
+madr21 eMAR, rdCPU, br (if !fcCPU then madr21);
+madr22 MDRout1, ldDWL;
+madr23 DWout2, ldMAR, br (if store then madr2E); !Skok na fazu izvrsavanja!
+madr24 br madr26;  !Skok na citanje operanada!
+
+!Pcrel!
+madr25 PCout1, IRPOMout3, ADDout2, ldMAR, br (if store then madr2E); !Skok na fazu izvrsavanja!
+
+!Citanje operanda!
+madr26 br (if hack then madr26);
+madr27 eMAR, rdCPU, br (if !fcCPU then madr27);
+madr28 MDRout1, ldDWH, incMAR; !Citam visi bajt operanda!
+madr29 br (if hack then madr29);
+madr2A eMAR, rdCPU, br (if !fcCPU then madr2A);
+madr2B MDRout1, ldDWL; !Citam nizi bajt operanda!
+madr2C DWout2, MOST2_1, MOST1_3, ldBW, ldBB, br madr2E; !Skok na fazu izvrsavanja!
+
+!Imm!
+madr2D IRDAout3, MOST3_2, MOST2_1, ldBB, br madr2E;
+
+!Izvrsavanje instrukcije!
+madr2E bropr;
+
+!Beql,..., Blequ!
+madr2F IRBRout3, br (if !brpom then madr74); !Skok na opsluzivanje prekida ako treba!
+madr30 PCout1, IRPOMout3, ADDout2, ldPC, br madr74; !Opsluzivanje prekida!
+
+!Jmp!
+madr31 IRJAout2, ldPC, br madr74; !Skok i onda opsluzivanje prekida!
+
+!Jsr!
+madr32 SPout2, ldMAR, PCLout3, mxMDR, ldMDR;
+madr33 br (if hack then madr33);
+madr34 eMAR, eMDR, wrCPU, br (if !fcCPU then madr34); !Nizi bajt PC na stek!
+madr35 decSP;
+madr36 SPout2, ldMAR, PCHout3, mxMDR, ldMDR;
+madr37 br (if hack then madr37);
+madr38 eMAR, eMDR, wrCPU, br (if !fcCPU then madr38); !Visi bajt PC na stek!
+madr39 decSP;
+madr3A IRJAout2, ldPC, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!Rts!
+madr3B incSP
+madr3C SPout2, ldMAR;
+madr3D eMAR, rdCPU, br (if !fcCPU then madr3D);
+madr3E MDRout1, ldDWH, incSP; !Skidam visi bajt PC sa steka!
+madr3F SPout2, ldMAR; 
+madr40 eMAR, rdCPU, br (if !fcCPU then madr40); 
+madr41 MDRout1, ldDWL; !Skidam nizi bajt PC sa steka!
+madr42 DWout2, ldPC; !skok na fazu opsluzivanja prekida!
+madr43 br madr74;
+
+!Rti!
+madr44 incSP;
+madr45 SPout2, ldMAR;
+madr46 eMAR, rdCPU, br (if !fcCPU then madr46); !Citam visi bajt PSW!
+madr47 MDRout1, ldPSWH, incSP; 
+madr48 SPout2, ldMAR;
+madr49 br (if hack then madr49);
+madr4A eMAR, rdCPU, br (if !fcCPU then madr4A); !Citam nizi bajt PSW!
+madr4B MDRout1, ldPSWL, br madr3B; !Nastavljam da skidam PC, kao u RTS!
+
+!Asr, Lsr, Ror i Rorc!
+madr4C shr, ldC;
+madr4D ldN, ldZ, ldV, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!Asl, Lsl, Rol i Rolc!
+madr4E shl, ldC;
+madr4F ldN, ldZ, ldV, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!Inte!
+madr50 stPSWI, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!Intd!
+madr51 clPSWI, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!Stivtp!
+madr52 AWout3, ldIVTP, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!Stsp!
+madr53 AWout3, ldSP, br madr74; !Skok na fazu opsluzivanja prekidna!
+
+!Halt!
+madr54 clSTART, br madr00; !Halt zaustavlja procesor, vracamo se na pocetak!
+
+!Ld!
+madr55 BBout2, MOST2_1, ldAB, ldAW, br madrFA;
+madrFA ldN, ldZ, ldC, ldV, br madr74;
+
+!St!
+madr56 ABout3, MOST3_2, ldAW, br madrF3;
+madrF3 AWHout3, mxMDR, ldMDR, br madr57;
+madr57 br (if hack then madr57);
+madr58 eMAR, eMDR, wrCPU, br (if !fcCPU then madr58);
+madr59 AWout3, mxMDR, ldMDR, incMAR
+madr5A br madrFD;
+madrFD br (if hack then madrFD);
+madrFE eMAR, eMDR, wrCPU, br (if !fcCPU then madrFE); !Skok na opsluzivanje!
+madrFF br madr5B;
+madr5B br madr74;
+
+!StoreL!
+madr5C ABout3, mxMDR, ldMDR;
+madr5D br (if hack then madr5D);
+madr5E eMAR, eMDR, wrCPU, br (if !fcCPU then madr5E);
+madr5F br madr74; !Skok na opsluzivanje prekida!
+
+!JADR!
+madr60 br (if imm then madr74); !opsluzivanje prekida!
+madr61 AWout3, MOST3_2, ldPC, br madr74; !opsluzivanje prekida!
+
+!ADD!
+madr62 BBout2, ABout3, add, ALUout1, ldAB, ldAW, ldC, ldV;
+madr63 ldN, ldZ, br madr74; !opsluzivanje prekida!
+
+!SUB!
+madr64 BBout2, ABout3, sub, ALUout1, ldAB, ldAW, ldC, ldV;
+madr65 ldN, ldZ, br madr74; !opsluzivanje prekida!
+
+!AND!
+madr66 BBout2, ABout3, and, ALUout1, ldAB, ldAW;
+madr67 ldN, ldZ, ldC, ldV, br madr74; !opsluzivanje prekida!
+ 
+!OR!
+madr68 BBout2, ABout3, or, ALUout1, ldAB, ldAW;
+madr69 ldN, ldZ, ldC, ldV, br madr74; !opsluzivanje prekida!
+
+!XOR!
+madr70 BBout2, ABout3, xor, ALUout1, ldAB;
+madr71 ldN, ldZ, ldC, ldV, br madr74; !opsluzivanje prekida!
+
+!Not!
+madr72 ABout3, not, ALUout1, ldAB, MOST1_3, ldAW;
+madr73 ldN, ldZ, ldC, ldV, br madr74;  !opsluzivanje prekida!
+
+!Opsluzivanje prekida!
+madr74 br (if !prekid then madr00); !Ako nije doslo do prekida, idemo na sledecu instrukciju!
+
+!Cuvanje konteksta procesora!
+madr75 SPout2, ldMAR, PCLout3, mxMDR, ldMDR;
+madr76 br (if hack then madr76);
+madr77 eMAR, eMDR, wrCPU, decSP, br (if !fcCPU then madr77);
+madr78 SPout2, ldMAR, PCHout3, mxMDR, ldMDR;
+madr79 br (if hack then madr79);
+madr7A eMAR, eMDR, wrCPU, decSP, br (if !fcCPU then madr7A);
+madr7B SPout2, ldMAR, PSWLout3, mxMDR, ldMDR;
+madr7C br (if hack then madr7C);
+madr7D eMAR, eMDR, wrCPU, decSP, br (if !fcCPU then madr7D);
+madr7E SPout2, ldMAR, PSWHout3, mxMDR, ldMDR;
+madr7F br (if hack then madr7F);
+madr80 eMAR, eMDR, wrCPU, decSP, br (if !fcCPU then madr80);
+
+!Utvrdivanje broja ulaza!
+!Unutrasnjih prekida (najvisi prioritet) nema, pa prvo proveravam opcod greske!
+madr81 br (if !PRCOD then madr83); !Ako nije bilo opcod greske, proveravam gradr!
+madr82 UINTout3, ldBR, clPRCOD, br madr8A; !u slucaju greske, obradjujem je!
+madr83 br (if !PRADR then madr85); !Ako nije bilo greske u adresiranju, proveravam dalje!
+madr84 UINTout3, ldBR, clPRADR, br madr8A; !Ako je doslo do greske, obrada!
+madr85 br (if !PRINM then madr87);!Da li je bilo nemaskirajucih?!
+madr86 UINTout3, ldBR, clPRINM, br madr8A; !Ako jeste, obrada!
+madr87 br (if !printr then madr89); !Da li je bilo maskirajucih?!
+madr88 UEXTout3, ldBR, clINTR, ldL, br madr8A; !Obrada spoljasnjih!
+madr89 UINTout3, ldBR; !Obrada maskirajucih!
+
+
+
+!Utvrdivanje adrese prekidne rutine!
+madr8A IVTPout1, IVTDSPout3, ADDout2, ldMAR;
+madr8B br (if hack then madr8B);
+madr8C eMAR, rdCPU, br (if !fcCPU then madr8C);
+madr8D MDRout1, ldDWH, incMAR;
+madr8E br (if hack then madr8E);
+madr8F eMAR, rdCPU, br (if !fcCPU then madr8F);
+madr90 MDRout1, ldDWL;
+madr91 DWout2,ldPC,clPSWI,clPSWT, br madr00;
+
+
+!Pushall!
+
+madr92 ABout3, MOST3_2, ldAW;
+madr93 SPout2, AWHout3, ldMAR, mxMDR, ldMDR;
+madr94 eMAR, eMDR, wrCPU, br (if !fcCPU then madr94);
+madr95 decSP;
+madr96 SPout2, AWout3,ldMAR, mxMDR, ldMDR;
+madr97 eMAR, eMDR, wrCPU, br (if !fcCPU then madr97);
+madr98 decSP;
+
+madr99 IVTPout1, MOST1_2, ldAW;
+madr9A SPout2, AWHout3, ldMAR, mxMDR, ldMDR;
+madr9B eMAR, eMDR, wrCPU, br (if !fcCPU then madr9B);
+madr9C decSP;
+madr9D SPout2, AWout3,ldMAR, mxMDR, ldMDR;
+madr9E eMAR, eMDR, wrCPU, br (if !fcCPU then madr9E);
+madr9F decSP;
+
+madrA0 SPout2, ldMAR, PSWLout3, mxMDR, ldMDR; !Nizi bajt PSW na stek!
+madrA1 eMAR, eMDR, wrCPU, decSP, br (if !fcCPU then madrA1);
+madrA2 SPout2, ldMAR, PSWHout3, mxMDR, ldMDR, decSP; !Visi bajt PSW na stek!
+madrA3 eMAR, eMDR, wrCPU, decSP, br (if !fcCPU then madrA3); 
+
+madrA4 br madr74;
+
+
+
+!Popall!
+
+madrA5 incSP, br madrC0;
+madrC0 incSP, br madrA6;
+madrA6 incSP;
+madrA7 SPout2, ldMAR;
+madrA8 eMAR, rdCPU, br (if !fcCPU then madrA8);
+madrA9 MDRout1, ldPSWH, incSP;
+madrAA incSP;
+madrAB SPout2, ldMAR;
+madrAC eMAR, rdCPU, br (if !fcCPU then madrAC);
+madrAD MDRout1, ldPSWL, incSP; 
+
+madrAE ;
+madrAF SPout2, ldMAR;
+madrB0 eMAR, rdCPU, br (if !fcCPU then madrB0);
+madrB1 MDRout1, ldDWH, incSP;
+madrB2 SPout2, ldMAR;
+madrB3 eMAR, rdCPU, br (if !fcCPU then madrB3);
+madrB4 MDRout1, ldDWL;
+madrB5 DWout2, MOST2_1, MOST1_3, ldIVTP;
+
+madrB6 incSP;
+madrB7 SPout2, ldMAR;
+madrB8 eMAR, rdCPU, br (if !fcCPU then madrB8);
+madrB9 MDRout1, ldDWL, incSP;
+madrBA SPout2, ldMAR;
+madrBB eMAR, rdCPU, br (if !fcCPU then madrBB);
+madrBC MDRout1, ldDWH;
+madrBD DWout2, MOST2_1, MOST1_3, ldAB, br madr74; !Skok na fazu opsluzivanja prekida!
+
+!!
